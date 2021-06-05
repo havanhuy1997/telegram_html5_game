@@ -59,8 +59,14 @@
                     </div>
                 </div>
                 <div class="row mb-4 stock-row">
-                    <div class="col">
+                    <div class="col-5">
                         <input class="form-control stock-code" type="text">
+                    </div>
+                    <div class="col-5">
+                        <input class="form-control stock-amount" type="number">
+                    </div>
+                    <div class="col-2">
+                        <button type="button" class="btn btn-danger" onclick="delStockCodeRow(this)">Delete</button>
                     </div>
                 </div>
             </div>
@@ -156,11 +162,21 @@
             };
         });
 
+        function delStockCodeRow(el) {
+            $(el).parents(".stock-row").remove();
+        };
+
         function addStockCodeRow() {
             $("#addStockCodeRow").after(
                 `<div class="row mb-2 stock-row">
-                    <div class="col">
+                    <div class="col-5">
                         <input class="form-control stock-code" type="text">
+                    </div>
+                    <div class="col-5">
+                        <input class="form-control stock-amount" type="number">
+                    </div>
+                    <div class="col-2">
+                        <button type="button" class="btn btn-danger" onclick="delStockCodeRow(this)">Delete</button>
                     </div>
                 </div>`
             );
@@ -195,8 +211,12 @@
                 "has_existing_portfolio": isExistPortfolio.value,
                 "investment_horizon": parseInt(investmentHorizon.value),
                 "accepted_lose": percentInt,
-                "stocks": stocks,
-                "stock_counts": stocks.map((i, j) => j + 1),
+                "stocks": $(
+                    "#stock-codes[style!='display: none;'] .stock-row .stock-code"
+                ).map((i, el) => el.value).toArray(),
+                "stock_amounts": $(
+                    "#stock-codes[style!='display: none;'] .stock-row .stock-amount"
+                ).map((i, el) => el.value).toArray(),
                 "name": namePortfolio.value,
             }
             console.log(result);
