@@ -1,24 +1,104 @@
 <!doctype html>
 <html lang="en">
-  <head>
+
+<head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link 
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css"
-        rel="stylesheet"
-        integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x"
-        crossorigin="anonymous">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
     <title>Submit Game</title>
     <script>
-        const POST_URL = "https://1c28b57f51d1.ngrok.io/submit";
+        const URL_submit = "https://49ea31162ed9.ngrok.io/submit";
+        function submitData() {
+            let stockExchange = document.querySelector('#stockExchange');
+            let isExistPortfolio = document.querySelector('#isExistPortfolio');
+            let investmentHorizon = document.querySelector('#investmentHorizon');
+            let percentLose = document.querySelector('#percentLose');
+            let namePortfolio = document.querySelector('#namePortfolio');
+            let errorPercentLose = document.querySelector(".errorPercentLose")
+            let errorNamePortfolio = document.querySelector(".errorNamePortfolio")
+            let result = {
+                "name": "My cool portfolio",
+                "exchange": "BINANCE",
+                "has_existing_portfolio": true,
+                "investment_horizon": 1,
+                "accepted_lose": 0,
+                "stocks": [],
+                "stock_counts": []
+            }
+            console.log("check percent lose")
+            if (!String(percentLose.value).length) {
+                console.log(String(percentLose.value))
+                console.log("empty field")
+                errorPercentLose.innerHTML = "Error! Empty field percent"
+                errorPercentLose.setAttribute("style", "display:block;")
+                return
+            }
+            errorPercentLose.setAttribute("style", "display:none;")
+            if (isNaN(percentLose.value)) {
+                console.log("check percent lose FASLE number")
+                errorPercentLose.setAttribute("style", "display:block;")
+                console.log(parseInt(percentLose.value))
+                return
+            }
+            errorPercentLose.setAttribute("style", "display:none;")
+            if (parseInt(percentLose.value) < 0 || parseInt(percentLose.value) > 100) {
+                errorPercentLose.innerHTML = "Error! Only enter number 0=>100"
+                errorPercentLose.setAttribute("style", "display:block;")
+                console.log("check percent lose FASLE")
+                return
+            }
+            errorPercentLose.setAttribute("style", "display:none;")
+
+            if (!String(namePortfolio.value).length) {
+                errorNamePortfolio.innerHTML = "Error! Empty field name"
+                errorNamePortfolio.setAttribute("style", "display:block;")
+                return
+            }
+
+
+            console.log("number lose is satisfied")
+            errorPercentLose.setAttribute("style", "display:none;")
+            errorNamePortfolio.setAttribute("style", "display:none;")
+
+            result["exchange"] = stockExchange.value;
+            result["has_existing_portfolio"] = isExistPortfolio.value;
+            result["investment_horizon"] = investmentHorizon.value;
+            result["accepted_lose"] = percentLose.value;
+            result["name"] = namePortfolio.value;
+            console.log(result);
+            fetch(URL_submit, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(result)
+            })
+                .then(async res => {
+                    const data = await res.json();
+                    console.log("Res:", data)
+                    notif = data["status"]
+                    errorNamePortfolio.innerHTML = `${notif}`
+                    errorNamePortfolio.setAttribute("style", "display:block;")
+                })
+                // .then(data => {
+                // console.log('Success:', data);
+                // })
+                .catch((error) => {
+                    console.error('Error:', error);
+                })
+        }
+
     </script>
-  </head>
-  <body>
-    <div class="container">
+</head>
+
+<body>
+    <h2>Stock Exchange</h2>
+    <div class="container m-1">
         <div class="row">
-            <div class="col">what stock exchange you work with? </div>
+            <div class="col">What stock exchange you work with?</div>
             <div class="col">
-                <select class="form-select" >
+                <select class="form-select" id="stockExchange">
                     <option value="NASDAQ">Nasdaq</option>
                     <option value="MISX">Moscow Stock Exchange</option>
                     <option value="BINANCE">Binance crypto exchange</option>
@@ -28,16 +108,16 @@
         <div class="row">
             <div class="col">Do you have existing investment portfolio?</div>
             <div class="col">
-                <select class="form-select" >
-                    <option value="1">Yes</option>
-                    <option value="0">No</option>
+                <select class="form-select" id="isExistPortfolio">
+                    <option value=true>Yes</option>
+                    <option value=false>No</option>
                 </select>
             </div>
         </div>
         <div class="row">
             <div class="col">What is your investment horizon?</div>
             <div class="col">
-                <select class="form-select" >
+                <select class="form-select" id="investmentHorizon">
                     <option value="1">less than 1 month</option>
                     <option value="2">less than 1 month</option>
                     <option value="3">3-6 months</option>
@@ -47,19 +127,30 @@
             </div>
         </div>
         <div class="row">
-            <div class="col">what percentage are you accepted to lose in the worst case scenario?</div>
+            <div class="col">What percentage are you accepted to lose in the worst case scenario?</div>
             <div class="col">
-                
+                <input class="form-control" type="text" name="" id="percentLose">
+                <p class="text-danger errorPercentLose" style="display:none;">Error! enter only number 1 => 100</p>
+
             </div>
         </div>
         <div class="row">
-            <button type="button" class="btn btn-primary" id="submit-btn">Submit</button>
+            <div class="col">Save your answer in DB, enter a name: </div>
+            <div class="col">
+                <input class="form-control" type="text" name="" id="namePortfolio">
+                <p class="text-danger errorNamePortfolio" style="display:none;">Error! Field is emply</p>
+            </div>
+
+        </div>
+        <div class="row">
+            <button type="button" class="btn btn-primary" id="submit-btn" type="submit"
+                onclick="submitData()">Submit</button>
         </div>
     </div>
-    <script
-        src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
-        crossorigin="anonymous">
-    </script>
-  </body>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous">
+        </script>
+</body>
+
 </html>
