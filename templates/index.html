@@ -62,9 +62,6 @@
                     <div class="col">
                         <input class="form-control stock-code" type="text">
                     </div>
-                    <div class="col">
-                        <input class="form-control stock-amount" type="number">
-                    </div>
                 </div>
             </div>
         </div>
@@ -97,6 +94,9 @@
 
         </div>
         <div class="row mt-2">
+            <p class="response-txt text-center"></p>
+        </div>
+        <div class="row mt-2">
             <button type="button" class="btn btn-primary" id="submit-btn" type="submit"
                 onclick="submitData()">Submit</button>
         </div>
@@ -108,8 +108,7 @@
     
     <script>
         var url = "{{ data.url }}submit";
-        var stockCodes = ["BINANCE:BTCUSDT", "BINANCE:ETHUSDT", "BINANCE:BNBUSDT", "BINANCE:NEOUSDT", "BINANCE:LTCUSDT", "BINANCE:QTUMUSDT", "BINANCE:ADAUSDT", "BINANCE:XRPUSDT", "BINANCE:EOSUSDT", "BINANCE:TUSDUSDT", "BINANCE:IOTAUSDT", "BINANCE:XLMUSDT", "BINANCE:ONTUSDT", "BINANCE:TRXUSDT", "BINANCE:ETCUSDT", "BINANCE:ICXUSDT", "BINANCE:NULSUSDT", "BINANCE:VETUSDT", "BINANCE:PAXUSDT", "BINANCE:USDCUSDT", "MISX:SIBN", "MISX:SBER", "MISX:SNGS", "MISX:MSNG", "MISX:RTKM", "MISX:LKOH", "MISX:IRGZ", "MISX:SARE", "MISX:SNGSP", "MISX:RTKMP", "MISX:SBERP", "MISX:SAREP", "MISX:AFLT", "MISX:MFGS", "MISX:LSNG", "MISX:MFGSP", "MISX:SAGOP", "MISX:SAGO", "MISX:KROT", "MISX:KROTP", "NASDAQ:SND", "NASDAQ:AAON", "NASDAQ:AAPL", "NASDAQ:AAWW", "NASDAQ:ABCB", "NASDAQ:ABCL", "NASDAQ:ABMD", "NASDAQ:ABNB", "NASDAQ:ABUS", "NASDAQ:ACAD", "NASDAQ:ACBI", "NASDAQ:ACCD", "NASDAQ:ACGL", "NASDAQ:ACHC", "NASDAQ:ACIA", "NASDAQ:ACIW", "NASDAQ:ACLS", "NASDAQ:ACOR", "NASDAQ:ACRS", "NASDAQ:ACTG"];
-        // var stockCodes = JSON.parse("{{ data.stock_codes }}".replaceAll("&#39;", '"'));
+        var stockCodes = JSON.parse("{{ data.stock_codes }}".replaceAll("&#39;", '"'));
         var stockExchange = document.querySelector('#stockExchange');
         var isExistPortfolio = document.querySelector('#isExistPortfolio');
         var investmentHorizon = document.querySelector('#investmentHorizon');
@@ -163,15 +162,13 @@
                     <div class="col">
                         <input class="form-control stock-code" type="text">
                     </div>
-                    <div class="col">
-                        <input class="form-control stock-amount" type="number">
-                    </div>
                 </div>`
             );
             addListenerForStockCode();
         };
         
         function submitData() {
+            $(".response-txt").text("");
             hideElement(errorPercentLose);
             hideElement(errorNamePortfolio);
             try {
@@ -190,17 +187,16 @@
                 return
             }
 
+            const stocks = $(
+                "#stock-codes[style!='display: none;'] .stock-row .stock-code"
+            ).map((i, el) => el.value).toArray()
             const result = {
                 "exchange": stockExchange.value,
                 "has_existing_portfolio": isExistPortfolio.value,
                 "investment_horizon": parseInt(investmentHorizon.value),
                 "accepted_lose": percentInt,
-                "stocks": $(
-                    "#stock-codes[style!='display: none;'] .stock-row .stock-code"
-                ).map((i, el) => el.value).toArray(),
-                "stock_counts": $(
-                    "#stock-codes[style!='display: none;'] .stock-row .stock-amount"
-                ).map((i, el) => el.value).toArray(),
+                "stocks": stocks,
+                "stock_counts": stocks.map((i, j) => j + 1),
                 "name": namePortfolio.value,
             }
             console.log(result);
@@ -213,7 +209,12 @@
             })
             .then(async res => {
                 const data = await res.json();
-                alert(data.message);
+                $(".response-txt").text(data.message);
+                if (!data.result) {
+                    $(".response-txt").css("color", "red");
+                } else {
+                    $(".response-txt").css("color", "green");
+                };
             })
             .catch((error) => {
                 console.error('Error:', error);

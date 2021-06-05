@@ -1,8 +1,10 @@
 import os
+from flask import json
 
 import telegram
 import pymongo as mg
 from dotenv import load_dotenv
+import flask
 from flask import Flask, request, render_template
 
 import utils as ut
@@ -43,21 +45,34 @@ def game():
     )
 
 
-@app.route("/submit", methods=["POST"])
+def add_headers(response):
+    response.headers.add('Access-Control-Allow-Headers', '*')
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Methods', '*')
+
+
+@app.route("/submit", methods=["POST", "OPTIONS"])
 def submit():
-    data = request.data
+    if request.method == "OPTIONS":
+        response = flask.jsonify({})
+        add_headers(response)
+        return response
+    data = json.loads(request.data)
     print(data)
     if my_collection.find({"name": data.get("name")}).count() > 0:
-        return {
+        res = {
             "result": False,
             "message": "Name already exists",
         }
     else:
         my_collection.insert_one(data)
-        return {
+        res = {
             "result": True,
             "message":  "Success",
         }
+    res = flask.jsonify(res)
+    add_headers(res)
+    return res
 
 def set_webhook():
     s = bot.setWebhook(url)
