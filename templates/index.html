@@ -7,95 +7,29 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
     <title>Submit Game</title>
-    <script>
-        const URL_submit = "https://49ea31162ed9.ngrok.io/submit";
-        function submitData() {
-            let stockExchange = document.querySelector('#stockExchange');
-            let isExistPortfolio = document.querySelector('#isExistPortfolio');
-            let investmentHorizon = document.querySelector('#investmentHorizon');
-            let percentLose = document.querySelector('#percentLose');
-            let namePortfolio = document.querySelector('#namePortfolio');
-            let errorPercentLose = document.querySelector(".errorPercentLose")
-            let errorNamePortfolio = document.querySelector(".errorNamePortfolio")
-            let result = {
-                "name": "My cool portfolio",
-                "exchange": "BINANCE",
-                "has_existing_portfolio": true,
-                "investment_horizon": 1,
-                "accepted_lose": 0,
-                "stocks": [],
-                "stock_counts": []
-            }
-            console.log("check percent lose")
-            if (!String(percentLose.value).length) {
-                console.log(String(percentLose.value))
-                console.log("empty field")
-                errorPercentLose.innerHTML = "Error! Empty field percent"
-                errorPercentLose.setAttribute("style", "display:block;")
-                return
-            }
-            errorPercentLose.setAttribute("style", "display:none;")
-            if (isNaN(percentLose.value)) {
-                console.log("check percent lose FASLE number")
-                errorPercentLose.setAttribute("style", "display:block;")
-                console.log(parseInt(percentLose.value))
-                return
-            }
-            errorPercentLose.setAttribute("style", "display:none;")
-            if (parseInt(percentLose.value) < 0 || parseInt(percentLose.value) > 100) {
-                errorPercentLose.innerHTML = "Error! Only enter number 0=>100"
-                errorPercentLose.setAttribute("style", "display:block;")
-                console.log("check percent lose FASLE")
-                return
-            }
-            errorPercentLose.setAttribute("style", "display:none;")
-
-            if (!String(namePortfolio.value).length) {
-                errorNamePortfolio.innerHTML = "Error! Empty field name"
-                errorNamePortfolio.setAttribute("style", "display:block;")
-                return
-            }
-
-
-            console.log("number lose is satisfied")
-            errorPercentLose.setAttribute("style", "display:none;")
-            errorNamePortfolio.setAttribute("style", "display:none;")
-
-            result["exchange"] = stockExchange.value;
-            result["has_existing_portfolio"] = isExistPortfolio.value;
-            result["investment_horizon"] = investmentHorizon.value;
-            result["accepted_lose"] = percentLose.value;
-            result["name"] = namePortfolio.value;
-            console.log(result);
-            fetch(URL_submit, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(result)
-            })
-                .then(async res => {
-                    const data = await res.json();
-                    console.log("Res:", data)
-                    notif = data["status"]
-                    errorNamePortfolio.innerHTML = `${notif}`
-                    errorNamePortfolio.setAttribute("style", "display:block;")
-                })
-                // .then(data => {
-                // console.log('Success:', data);
-                // })
-                .catch((error) => {
-                    console.error('Error:', error);
-                })
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script
+        src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"
+        integrity="sha256-T0Vest3yCU7pafRw9r+settMBX6JkKN06dqBnpQ8d30="
+        crossorigin="anonymous"></script>
+    <style>
+        .ui-helper-hidden-accessible {
+            display: none;
         }
 
-    </script>
+        .ui-widget-content {
+            border: solid;
+            width: 200px;
+            background-color: white;
+        }
+
+    </style>
 </head>
 
 <body>
-    <h2>Stock Exchange</h2>
-    <div class="container m-1">
-        <div class="row">
+    <div class="container">
+        <div class="row mt-2"><h2 class="text-center">Stock Exchange</h2></div>
+        <div class="row mt-2">
             <div class="col">What stock exchange you work with?</div>
             <div class="col">
                 <select class="form-select" id="stockExchange">
@@ -105,16 +39,36 @@
                 </select>
             </div>
         </div>
-        <div class="row">
+        <div class="row mt-2">
             <div class="col">Do you have existing investment portfolio?</div>
             <div class="col">
                 <select class="form-select" id="isExistPortfolio">
                     <option value=true>Yes</option>
-                    <option value=false>No</option>
+                    <option selected value=false>No</option>
                 </select>
             </div>
         </div>
         <div class="row">
+            <div class="container mt-2" id="stock-codes" style="display: none;">
+                <div class="row">
+                    <div class="col">Stock code</div><div class="col">Amount</div>
+                </div>
+                <div class="row mb-2" id="addStockCodeRow">
+                    <div class="col-4">
+                        <button type="button" class="btn btn-secondary" onclick="addStockCodeRow()">Add</button>
+                    </div>
+                </div>
+                <div class="row mb-4 stock-row">
+                    <div class="col">
+                        <input class="form-control stock-code" type="text">
+                    </div>
+                    <div class="col">
+                        <input class="form-control stock-amount" type="number">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
             <div class="col">What is your investment horizon?</div>
             <div class="col">
                 <select class="form-select" id="investmentHorizon">
@@ -126,23 +80,23 @@
                 </select>
             </div>
         </div>
-        <div class="row">
+        <div class="row mt-2">
             <div class="col">What percentage are you accepted to lose in the worst case scenario?</div>
             <div class="col">
-                <input class="form-control" type="text" name="" id="percentLose">
+                <input class="form-control" type="number" name="" id="percentLose">
                 <p class="text-danger errorPercentLose" style="display:none;">Error! enter only number 1 => 100</p>
 
             </div>
         </div>
-        <div class="row">
+        <div class="row mt-2">
             <div class="col">Save your answer in DB, enter a name: </div>
             <div class="col">
-                <input class="form-control" type="text" name="" id="namePortfolio">
+                <input class="form-control" type="text" name="" id="namePortfolio" required>
                 <p class="text-danger errorNamePortfolio" style="display:none;">Error! Field is emply</p>
             </div>
 
         </div>
-        <div class="row">
+        <div class="row mt-2">
             <button type="button" class="btn btn-primary" id="submit-btn" type="submit"
                 onclick="submitData()">Submit</button>
         </div>
@@ -151,6 +105,121 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
         integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous">
         </script>
+    
+    <script>
+        var url = "{{ data.url }}submit";
+        var stockCodes = ["BINANCE:BTCUSDT", "BINANCE:ETHUSDT", "BINANCE:BNBUSDT", "BINANCE:NEOUSDT", "BINANCE:LTCUSDT", "BINANCE:QTUMUSDT", "BINANCE:ADAUSDT", "BINANCE:XRPUSDT", "BINANCE:EOSUSDT", "BINANCE:TUSDUSDT", "BINANCE:IOTAUSDT", "BINANCE:XLMUSDT", "BINANCE:ONTUSDT", "BINANCE:TRXUSDT", "BINANCE:ETCUSDT", "BINANCE:ICXUSDT", "BINANCE:NULSUSDT", "BINANCE:VETUSDT", "BINANCE:PAXUSDT", "BINANCE:USDCUSDT", "MISX:SIBN", "MISX:SBER", "MISX:SNGS", "MISX:MSNG", "MISX:RTKM", "MISX:LKOH", "MISX:IRGZ", "MISX:SARE", "MISX:SNGSP", "MISX:RTKMP", "MISX:SBERP", "MISX:SAREP", "MISX:AFLT", "MISX:MFGS", "MISX:LSNG", "MISX:MFGSP", "MISX:SAGOP", "MISX:SAGO", "MISX:KROT", "MISX:KROTP", "NASDAQ:SND", "NASDAQ:AAON", "NASDAQ:AAPL", "NASDAQ:AAWW", "NASDAQ:ABCB", "NASDAQ:ABCL", "NASDAQ:ABMD", "NASDAQ:ABNB", "NASDAQ:ABUS", "NASDAQ:ACAD", "NASDAQ:ACBI", "NASDAQ:ACCD", "NASDAQ:ACGL", "NASDAQ:ACHC", "NASDAQ:ACIA", "NASDAQ:ACIW", "NASDAQ:ACLS", "NASDAQ:ACOR", "NASDAQ:ACRS", "NASDAQ:ACTG"];
+        // var stockCodes = JSON.parse("{{ data.stock_codes }}".replaceAll("&#39;", '"'));
+        var stockExchange = document.querySelector('#stockExchange');
+        var isExistPortfolio = document.querySelector('#isExistPortfolio');
+        var investmentHorizon = document.querySelector('#investmentHorizon');
+        var percentLose = document.querySelector('#percentLose');
+        var namePortfolio = document.querySelector('#namePortfolio');
+        var errorPercentLose = document.querySelector(".errorPercentLose")
+        var errorNamePortfolio = document.querySelector(".errorNamePortfolio")
+        var stockCodesEl = document.querySelector('#stock-codes');
+
+        function getStockCodes(stock) {
+            const codes = [];
+            for (let code of stockCodes) {
+                if (code.startsWith(stock)) {
+                    codes.push(code);
+                }
+            };
+            return codes;
+        };
+
+        function hideElement(el) {
+            el.setAttribute("style", "display:none;");
+        };
+
+        function showElement(el) {
+            el.setAttribute("style", "display:block;");
+        };
+
+        function addListenerForStockCode() {
+            const suggestCodes = getStockCodes(stockExchange.value);
+            $(".stock-row .stock-code").autocomplete({
+                source: suggestCodes
+            });
+        };
+
+        stockExchange.addEventListener("change", (event) => {
+            addListenerForStockCode();
+        });
+
+        isExistPortfolio.addEventListener("change", (event) => {
+            if (isExistPortfolio.value == "true") {
+                showElement(stockCodesEl);
+                addListenerForStockCode();
+            } else {
+                hideElement(stockCodesEl);
+            };
+        });
+
+        function addStockCodeRow() {
+            $("#addStockCodeRow").after(
+                `<div class="row mb-2 stock-row">
+                    <div class="col">
+                        <input class="form-control stock-code" type="text">
+                    </div>
+                    <div class="col">
+                        <input class="form-control stock-amount" type="number">
+                    </div>
+                </div>`
+            );
+            addListenerForStockCode();
+        };
+        
+        function submitData() {
+            hideElement(errorPercentLose);
+            hideElement(errorNamePortfolio);
+            try {
+                var percentInt = parseInt(percentLose.value);
+                if (isNaN(percentInt) || percentInt > 100 || percentInt < 0) {
+                    showElement(errorPercentLose);
+                    return
+                };
+            } catch (er) {
+                showElement(errorPercentLose);
+                return
+            }
+
+            if (!namePortfolio.value) {
+                showElement(errorNamePortfolio);
+                return
+            }
+
+            const result = {
+                "exchange": stockExchange.value,
+                "has_existing_portfolio": isExistPortfolio.value,
+                "investment_horizon": parseInt(investmentHorizon.value),
+                "accepted_lose": percentInt,
+                "stocks": $(
+                    "#stock-codes[style!='display: none;'] .stock-row .stock-code"
+                ).map((i, el) => el.value).toArray(),
+                "stock_counts": $(
+                    "#stock-codes[style!='display: none;'] .stock-row .stock-amount"
+                ).map((i, el) => el.value).toArray(),
+                "name": namePortfolio.value,
+            }
+            console.log(result);
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(result)
+            })
+            .then(async res => {
+                const data = await res.json();
+                alert(data.message);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            })
+        }
+    </script>
 </body>
 
 </html>
