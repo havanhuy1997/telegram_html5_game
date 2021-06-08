@@ -28,7 +28,17 @@
 
 <body>
     <div class="container">
-        <div class="row mt-2"><h2 class="text-center">Stock Exchange</h2></div>
+        <div class="row mt-2">
+            <h2 class="text-center">
+                Stock Exchange,
+                {% if data.user.answers %}
+                    Welcome back
+                {% else %}
+                    Hello
+                {% endif %}
+                {{ data.user.user_firstname }} {{ data.user.user_lastname }} !
+            </h2>
+        </div>
         <div class="row mt-2">
             <div class="col">What stock exchange you work with?</div>
             <div class="col">
@@ -97,8 +107,18 @@
                 <input class="form-control" type="text" name="" id="namePortfolio" required>
                 <p class="text-danger errorNamePortfolio" style="display:none;">Error! Field is emply</p>
             </div>
-
         </div>
+        {% if data.user.answers %}
+            <div class="row mt-2">
+                <div class="col">
+                    Answers are saved before:
+                    {% for answer in data.user.answers %}
+                        {{ answer.name }} &ensp;
+                    {% endfor %}
+                </div>
+            </div> 
+        {% endif %}
+        
         <div class="row mt-2">
             <p class="response-txt text-center"></p>
         </div>
@@ -113,8 +133,11 @@
         </script>
     
     <script>
+
         var url = "{{ data.url }}submit";
-        var stockCodes = JSON.parse("{{ data.stock_codes }}".replaceAll("&#39;", '"'));
+        var stockCodes = parseJson("{{ data.stock_codes }}");
+        console.log("{{ data.user }}")
+        var user = parseJson("{{ data.user }}");
         var stockExchange = document.querySelector('#stockExchange');
         var isExistPortfolio = document.querySelector('#isExistPortfolio');
         var investmentHorizon = document.querySelector('#investmentHorizon');
@@ -123,6 +146,12 @@
         var errorPercentLose = document.querySelector(".errorPercentLose")
         var errorNamePortfolio = document.querySelector(".errorNamePortfolio")
         var stockCodesEl = document.querySelector('#stock-codes');
+
+        function parseJson(s) {
+            return JSON.parse(
+                s.replaceAll("&#39;", '"').replaceAll("None", "null")
+            );
+        }
 
         function getStockCodes(stock) {
             const codes = [];
@@ -219,13 +248,18 @@
                 ).map((i, el) => el.value).toArray(),
                 "name": namePortfolio.value,
             }
-            console.log(result);
             fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(result)
+                body: JSON.stringify({
+                    user_id: user.user_id,
+                    user_name: user.user_name,
+                    user_firstname: user.user_firstname,
+                    user_lastname: user.user_lastname,
+                    "answer": result,
+                })
             })
             .then(async res => {
                 const data = await res.json();
@@ -237,6 +271,8 @@
                 };
             })
             .catch((error) => {
+                $(".response-txt").text("Unknown Error! Try again.");
+                $(".response-txt").css("color", "red");
                 console.error('Error:', error);
             })
         }
